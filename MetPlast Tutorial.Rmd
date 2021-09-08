@@ -1,0 +1,314 @@
+---
+title: "MetPlast Tutorial"
+author: "Lucio D'Andrea"
+date: "8/3/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+Plants as sessile organisms are unable to evade unfavorable growing conditions by simply moving away. Hence, they evolved a unique phenotypic plasticity that allows them to better adapt or survive to challenging environments. Metabolic plasticity is the ability of plants to biosynthesize a myriad of specialized compounds that allows them to cope with changes in their immediate surroundings. Thus, specialized metabolites are involved in a wide variety of ecological processes such as herbivorous attack, interaction with neighboring plants, as well as dealing with changes in light, or temperature conditions.
+
+The evolution of plant metabolic plasticity has been mainly driven by gene duplication, (or even whole genome duplication) followed by neo-functionalization. Gene duplication has been proven to shape the evolution of several specialized metabolic pathways. However, the effect of WGD on the metabolic plasticity remains to be elucidated. Possibly, the duplication of the whole genome allowed plants to screen a wider phenotypic space under stress conditions, promoting innovation, rapid adaptation and ultimately, speciation. 
+
+Artificial selection processes have also influenced plant metabolic repertoire. Domestication, i.e., the process of selecting plants to increase their suitability to human requirements, as well as crop improvement has caused genetic bottlenecks and massive reduction of the allelic diversity. Thus, artificial selection has introduced quantitative changes in various nutrition compounds. For instance, studies on tomato domestication have shown a major reduction in the levels of the anti-nutritional steroidal glycoalkaloids in ripe fruits. Although, both natural and artificial selection have been pointed as major forces shaping the biosynthesis and accumulation of several specialized metabolites, the evaluation of their effects on the metabolome and metabolic plasticity are in their infancy.
+
+Information theory provides a statistical framework that allows to quantify and evaluate metabolic plasticity. Metabolome diversity and specialization can be calculated based on the Shannon entropy of the metabolic frequency distribution. Shannon entropy is a useful parameter, that measures the information held in a set of data. Thus, its calculation can be used to estimate different parameters associated with a given metabolome: (1) Hj index, metabolome diversity; (2) j index, metabolic profile specialization; (3) Si index, metabolic specificity of individual metabolites. The individual calculation of these parameters was successfully applied on LC-MS/MS data to understand the dynamics of different plant species’ metabolomes.
+
+Here, we present MetPlast, an R-package that integrates the calculation, and visualization of Shannon-based metabolic plasticity parameters. We evaluate the effect of crop domestication by comparing the proposed parameters between the domesticated Solanum lycopersicum, the semi-domesticated S. lycopersicum var. cerisiforme and the wild relative S. pimpinellifolium.
+
+# Upload MetPlast packages
+
+Install and load the MetPlast package from GitHub:
+
+```{r}
+# install.github ("danlucio86/MetPlast")
+
+library("MetPlast")
+```
+
+# Upload external packages
+
+This package has several external dependencies. Hence, the user needs to install and upload the following packages: 
+
+1. dlookr
+2. ggplot2
+3. ggfortify
+4. tidyverse
+5. data.table
+6. grid.Extra
+
+```{r}
+# install.packages()
+```
+
+Then, upload them:
+
+```{r}
+
+library("dlookr")
+
+library("ggplot2")
+
+library("ggfortify")
+
+library ("tidyverse")
+
+library("data.table")
+
+library("gridExtra")
+
+library("FactoMineR")
+
+library("factoextra")
+
+
+```
+
+# Data 
+
+## Uploading
+
+This package takes as a data set a data frame containing the standardized quantity of different metabolites - measured as peak's intensity- in a given set of samples. It needs to be tidy in order to have the first column the "Compounds", and then all the samples. It is important to named the first column as "Compounds".
+
+Upload in R the testing  data set "Test.csv" obtained from Zhug et al 2018.This data set contains the metabolic profile of  red-fruited tomato populations including three different species: S. lycopersicum, S. lycopercicum var. cersiforme, and S. pimpinellifolium.  Zhug et al 2018 quantified fruit metabolites using a broadly targeted liquid chromatography-tandem mass spectrometry (LC-MS/MS)- based metabolic profiling method. The data set contains 301 different accessions (2 biological replicates each), expanding across different geographical distribution, passport information, between others. Thus, although through out the tutorial the samples are visualize based on the species identity, it is absolutely essential to keep in mind the different nature of the accessions. 
+
+```{r, echo=TRUE}
+Data <- read.csv2(file = "Test.csv", header = TRUE, row.names = "Compounds")
+
+library(rmarkdown)
+paged_table(head(Data))
+
+```
+
+## Replacing NAs values
+
+When comparing the set of metabolites from different samples, it is pretty usual that some metabolites are sample-specific. Hence, it is expected to have missing values (NAs). In order to deal with this, The NAs values are replaced by the minimum value found in the data set divided by 1e6.
+
+```{r}
+Data[is.na(Data)] <- (min(Data, na.rm=TRUE))/1000000
+
+library(rmarkdown)
+paged_table(head(Data))
+```
+
+## Initial statistical analysis 
+
+### Testing normal distribution
+
+Before proceeding with the analysis of the metabolic data, we  recommend to test if each sample is normally distributed.
+
+For example, here we performs Shapiro-Wilk to test whether the samples are normally distributed. Considering an alpha value of 1 %, then if the Shapiro value is lower than 0.01 the null hypothesis is not reject and we can assume normal distribution.  
+
+```{r}
+narmality <- normality(Data)
+
+#Based on these results we can conclude that all our samples have normal distribution (value >0.01). Moreover, most of them show a value greater than 0.05 providing higher robutness to the analysis.
+
+```
+
+
+# Metabolic Parameters
+
+## Metabolic Plasticity (MetDiv function)
+
+MetDiv() calculates METabolic Diversity (Hj) index based on Shannon entropy. The metabolic profile diversity is defined as the Shannon entropy using MS/MS metabolite frequency distribution in a sample (j). Hj can take any value between zero when only one metabolite is detected up to log2(m), where all m metabolites are detected and accumulates at the same frequency: 1/m.
+
+This function returns a list of 5 objects that are described below.
+
+```{r}
+Hj <- MetDiv (Data)
+
+```
+
+It returns a list with 5 objects: 
+
+1. View(Hj[[2]]) display a data frame with the Hj value (col2) and number of peaks (compounds) (col3) per species (col1).
+
+```{r}
+print(Hj[[2]])
+```
+
+In our example the Hj factor can range between 0 - when only one metabolite is detected- and log2(980) = 9,93 - when all the detected metabolites accumulates at the same frequency. 
+
+This data frame is then used to generate a series of plots showing the behavior and inter-dependency of the calculated variables: Species, Hj, and number of compounds. 
+
+2. A boxplot depicting the variation of Hj per species; 
+
+The box plot shows the calculated metabolic diversity (Hj) for each metabolome grouped by species.
+
+```{r}
+print(Hj[[2]] %>% filter(Species=="S.lycopersicum"))
+print(Hj[[2]] %>% filter(Species=="S.lycopersicum.var.cerasiforme"))
+print(Hj[[2]] %>% filter(Species=="S.pimpinellifolium"))
+```
+
+It can be observe that the domesticated S. lycopersicum Hj indexes display a higher variance, ranging from 5.76 to 8.87, compare with S. lycopersicum var. cersiformis (5.91 - 8.75) and the wild relative S. pimpinellifolium (6.38 - 8.48). These differences might be due to technical and biological reasons, such as sampling, accessions and the domestication process. Additionally, a few outliers can be observed.  
+
+The median values show that there is a higher Hj median value when the degree of domestication is lower. Possibly indicating that in average and considering this data set, it is more likely to get a more diverse metabolome as the degree of domestication is lower.
+
+3. A point plot depicting the dependency between the number of peaks and Hj; 
+
+The Hj factors depends mostly on two different parameters: (a) The number of peaks, (b) the frequency of each peak in the whole data set. This plot shows to what extend the Hj increases based on the number of peak in the species under evaluation. In general, it can be expected to observe a curve where the Hj values reaches a plateau. 
+
+4. A point plot depicting the dependency between the number of peaks and Species; 
+
+As mention before he Hj factors depends mostly on two different parameters including the number of peaks. In this plot we can observe that the variation on the compounds detected in the different species have a similar behavior as the Hj factor. Hence, we can infer that the higher level of metabolic diversity  in the less domesticated species, could be related with a lost in the capacity of synthesizing certain compounds.
+
+5. A grid with all the plots (point 2, 3 and 4). 
+
+Summary: 
+These differences might be related with the geographical origins, consumption type or improvement status in the S. lycopersicum and S.lycopersicum.var.cerasiformis. To evaluate this possibility we can include categorical data. As an example please, upload the file categories.csv, and store it as a vector called "categories":
+
+```{r}
+categories <- read.csv2(file="categories.csv")
+```
+
+Then, it can be added to the data frame generated by MetDiv()
+
+```{r}
+Data_categ <- cbind (Hj[[2]], categories)
+```
+
+Finally, the same plots generated by MetDiv() can be generated using the package ggplot2. As an example:
+
+```{r}
+ggplot(Data_categ, aes(numb_peaks, Species, color = Categories)) + geom_point() + theme(legend.position = "none") 
+```
+
+This analysis shows that the categorical data used explain at some extend the high variance observe within some species. The very same strategy can be applied in the following functions.  
+
+## Metabolite and Metabolome Specialization Index (MetSpec function)
+
+MetSpec calculates METabolite SPECialization (Si) and METabolome SPECialization (δj) indexes. Metabolic specificity (Si) is defined as the specificity of a particular MS/MS metabolite (i) among a set of samples (j). Metabolome specialization δj is measured for each jth sample, as the average of the MS/MS specificity.
+
+It returns a list with 4 objects that are described below. 
+
+```{r}
+Dj <- MetSpec (Data)
+```
+
+It returns a list with 4 objects: 
+
+1. A data frame with the Si value per compound;
+
+View(Dj[[2]]) allows the user to obtain a data frame with each compound Si value. This values indicate how specific a metabolite is in a given data set. Si will be zero if the metabolite accumulates at the same frequency in all samples and will be maximum with log2(m), i.e. if the metabolite  exclusively accumulated in a single sample. In our example, theoretically range between 0 and log2(980)=9.93
+
+A closer look to the values, shows that Si ranges from 0.092 (m = SlFM0252) to 4,62 (m = SlFM1980), indicating that the latter was detected in a fewer amount of samples compare with SlFM0252.
+
+2. A data frame with the δj per Species; 
+
+View(Dj[[3]]) allows the user to obtain a data frame with each compound metabolome specialization value (Dj -δj-). This values indicate how specialize a metabolome is, given a data set. δj varies from 0 if all metabolites that accumulates in the sample are completely unspecific (Si = 0 for all) up to a maximum of log2(m), when all metabolites accumulating in a sample are not synthesized anywhere else.
+ 
+3. A point plot depicting the Si value of each compound; 
+
+This point plot is a visual representation of the data frame Dj[[2]], where each metabolite specificity is quantified (Si). It can be observe that the vast majority of the compounds has a Si value between 0 and 1, indicating a similar accumulation of the different metabolites across the data set. 
+
+4. A point plot depicting the δj per species
+
+This boxplot is a visual representation of the dataframe Dj[[3]], where the metabolome specialization (Dj) of each species are measured. In our example, it there is a higher variation in the domesticated landraces compared with the wild relative S. pimpinellifolium. Thus, we might need to consider some categorical data, as explained before, to confidently assess differences in the specialization levels.
+
+## Metabolite Specialization Analysis (MetliteSpec function)
+
+MetliteSpec calculates the contribution of METaboLITE SPECialization factor (Pij.Si) to the Metabolome specialization index.
+
+Metabolite specialization factor (Pij.Si) is defined as product of the a metabolite specilization index (Si) and the frequency of the metabolite in a given sample (Pij).
+
+This function, returns a list with 4 objects explained below:
+
+```{r}
+MetliteSpec <- MetliteSpec(Data)
+```
+
+This function returns a list with 4 objects: 
+
+1. A data frame with the Pij.Si values per species and compound; 
+
+View(MetliteSpec[[2]]) allows to observe the contribution of each metabolite in each species to the Dj value. 
+
+```{r}
+print(MetliteSpec[[2]])
+```
+
+
+2. A data frame with the highest Pij.Si compound value per species; 
+
+View(MetliteSpec[[3]]) extracts the higher Pij.Si between all samples. Hence, indicating which is the metabolite that is shows the higher degree of specificity in the data set under analysis. 
+
+NOTE: This functions cluster the samples based on Species. In this particular example where there are more than one accessions per species, this information needs to be interpreted with caution.
+
+```{r}
+print(MetliteSpec[[3]])
+```
+
+3. A point plot depicting the Pij.Si value of each species 
+
+This plot is a visual representation of the data frame MetliteSpec[[2]]. In our example, it can be observe that the contribution of each metabolite in the specialization of each metabolome. This plot not only provide with a general overview of each metabolite contribution to the Dj, but also facilitate the visualization of some important features such as clustering. The most obvious case happens in S. pimpinellifolium, where two set of metabolite specialization clusters can be observe. Hence, it can be infer that the high Dj value is mostly due to an small amount of highly specific metabolites.
+
+4. A point plot depicting the highest Pij.Si value per species
+
+This plot is a visual representation of the data frame MetliteSpec[[3]]. Here we can observe that the most specialized metabolite in S. lycopersicum and S. lycopersicum var. cersiforme is the same one (SlFM1991), whereas for the wild relative S. pimpinellifolium is SlFM0106. 
+
+** Please, be aware that this data indicates the levels of specialization but not the levels of a certain compound **
+
+## Metabolic Plasticity Parameters Summary
+
+This functions generates a table summarizing the Hj, number of peaks, and Dj parameters per species.
+
+It uses the data frames generated by MetDiv() and MetSpec(), a generates a new data frame that allows the pairwise comparison of the different parameters.
+
+It returns a list with two objects explained below.
+
+```{r}
+MetPar <- MetPar(Data)
+
+```
+
+This function returns two objects: 
+
+1. A data frame with all the summarized information.
+
+View(MetPar[[1]]) includes col1: Species; col2: Hj; col3: numb_peaks; col4: Dj. 
+
+```{r}
+print(MetPar[[1]])
+```
+
+This data frame can be use to evaluate the statistical significance of the observed differences :
+
+```{r}
+# Statistical Analysis 
+
+## Extracting Parameters data frame
+
+MetPar_df <- as.data.frame(MetPar[[1]])
+
+## ANOVA analysis
+
+library (ggpubr)
+
+compare_means(Hj ~ Species, data = MetPar_df)
+```
+
+2. A plot to visualize the dependency between Hj and Dj. 
+
+This point plot shows the dependency between the metabolic diversity (Hj) and the metabolome specialization (Dj) in each sample. In this case there is not a clear general trend. However, this plot suggests that accessions from different species might have a different trend. Thus, while S. lycopersicum var. cerasiforme shows a tendency to have a more specialized metabolome in those accessions with lower metabolic diversity, there is not a clear correlation in the case of S. lycopersicum. 
+
+## Metabolic Plasticity Statistics
+
+Besides the general statistical methods, MetPlast package includes two extra statistical parameters. MetStats functions generates a table summarizing the Hj, and the divergence associated to each Hj (HRj) and the Kullback–Leibler divergence (Divj). This function takes the data frame generated by Hj <- MetDiv().
+
+```{r}
+MetStats <- MetStats(Data)
+```
+
+The obtained data fram includes two statistical parameters: 
+
+1. HRj measures the divergence with respect to the whole average metabolome. HRj will be equal to or larger than the corresponding Hj. 
+
+2. Divj is define as the Kullback–Leibler divergence of the sample j. Divj measures how much a given sample j departs from the corresponding metabolome distribution of the whole system.
+
