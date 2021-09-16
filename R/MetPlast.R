@@ -158,17 +158,14 @@ MetDiv <- function(Data){
   # Output generation
   Hj <- cbind (Hj, numb_peaks)
   Hj_df <- as.data.frame (Hj)
-  Hj_Species_df <- setDT(Hj_df, keep.rownames = "Species")
-  Hj_Species_df$Species <- sub("\\_?\\.?\\d+", "", Hj_Species_df$Species)
-  Hj_Species_df$Species <- sub("\\..", ".", Hj_Species_df$Species)
-
+  Hj_Species_df <- setDT(Hj_df, keep.rownames = "Samples")
 
   # Graphical output
-  p1 <- ggplot(Hj_Species_df, aes(Hj, Species, color = Species)) + geom_boxplot() + geom_point() + theme(legend.position = "none")
+  p1 <- ggplot(Hj_Species_df, aes(Hj, Species, color = Samples)) + geom_boxplot() + geom_point() + theme(legend.position = "none")
   print(p1)
-  p2 <- ggplot(Hj_Species_df, aes(numb_peaks, Hj, color = Species)) + geom_point()
+  p2 <- ggplot(Hj_Species_df, aes(numb_peaks, Hj, color = Samples)) + geom_point()
   print(p2)
-  p3 <- ggplot(Hj_Species_df, aes(numb_peaks, Species, color = Hj)) + geom_point() + theme(legend.position = "none")
+  p3 <- ggplot(Hj_Species_df, aes(numb_peaks, Samples, color = Hj)) + geom_point() + theme(legend.position = "none")
   print(p3)
   grid_plot <- grid.arrange (p1, p2, p3)
 
