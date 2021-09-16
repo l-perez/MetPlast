@@ -10,8 +10,8 @@
 #'
 #' @return It returns a dataframe with metabolite frequency
 
-Pij_fc <- function (Data) {Total_species <- apply (Data, MARGIN=2, FUN = sum)
-Pij <- sweep(Data, MARGIN = 2, Total_species, FUN = '/')}
+Pij_fc <- function (Data) {Total_samples <- apply (Data, MARGIN=2, FUN = sum)
+Pij <- sweep(Data, MARGIN = 2, Total_samples, FUN = '/')}
 
 #' Metabolite expression identity internal function
 #'
@@ -112,7 +112,7 @@ numb_peaks <- apply (Data_numb_peaks, MARGIN = 2, FUN = sum)}
 
 my_filter_function <- function(table) {
   table %>%
-    group_by(Species) %>%
+    group_by(Samples) %>%
     filter(Pij_Si == max (Pij_Si))
 }
 
@@ -158,19 +158,21 @@ MetDiv <- function(Data){
   # Output generation
   Hj <- cbind (Hj, numb_peaks)
   Hj_df <- as.data.frame (Hj)
-  Hj_Species_df <- setDT(Hj_df, keep.rownames = "Samples")
+  Hj_Samples_df$Samples <- sub("\\_?\\.?\\d+", "", Hj_Samples_df$Samples)
+  Hj_Samples_df$Samples <- sub("\\..", ".", Hj_Samples_df$Samples)
+  Hj_Samples_df <- setDT(Hj_df, keep.rownames = "Samples")
 
   # Graphical output
-  p1 <- ggplot(Hj_Species_df, aes(Hj, Species, color = Samples)) + geom_boxplot() + geom_point() + theme(legend.position = "none")
+  p1 <- ggplot(Hj_Samples_df, aes(Hj, Samples, color = Samples)) + geom_boxplot() + geom_point() + theme(legend.position = "none")
   print(p1)
-  p2 <- ggplot(Hj_Species_df, aes(numb_peaks, Hj, color = Samples)) + geom_point()
+  p2 <- ggplot(Hj_Samples_df, aes(numb_peaks, Hj, color = Samples)) + geom_point()
   print(p2)
-  p3 <- ggplot(Hj_Species_df, aes(numb_peaks, Samples, color = Hj)) + geom_point() + theme(legend.position = "none")
+  p3 <- ggplot(Hj_Samples_df, aes(numb_peaks, Samples, color = Hj)) + geom_point() + theme(legend.position = "none")
   print(p3)
   grid_plot <- grid.arrange (p1, p2, p3)
 
   # List
-  list <- list(grid_plot, Hj_Species_df)
+  list <- list(grid_plot, Hj_Samples_df)
   print (list)
 }
 
@@ -222,18 +224,18 @@ MetSpec <- function (Data){
 
   #Output metabolome specilization
   Dj_df <- data.frame (Dj)
-  Dj_Species_df <- setDT(Dj_df, keep.rownames = "Species")
-  Dj_Species_df$Species <- sub("\\_?\\.?\\d+", "", Dj_Species_df$Species)
-  Dj_Species_df$Species <- sub("\\..", ".", Dj_Species_df$Species)
-  print(Dj_Species_df)
+  Dj_Samples_df <- setDT(Dj_df, keep.rownames = "Samples")
+  Dj_Samples_df$Samples <- sub("\\_?\\.?\\d+", "", Dj_Samples_df$Samples)
+  Dj_Samples_df$Samples <- sub("\\..", ".", Dj_Samples_df$Samples)
+  print(Dj_Samples_df)
 
   # Graphical output
-  p2 <- ggplot(Dj_Species_df, aes(Species, Dj)) + geom_boxplot() + geom_point()
+  p2 <- ggplot(Dj_Samples_df, aes(Samples, Dj)) + geom_boxplot() + geom_point()
   print (p2)
   grid_plot <- grid.arrange (p1, p2)
 
   #List
-  list <- list(grid_plot, Si_df, Dj_Species_df)
+  list <- list(grid_plot, Si_df, Dj_Samples_df)
   print(list)
 }
 #' Metabolite Specialization Analysis
@@ -271,18 +273,18 @@ MetliteSpec <- function (Data){
   Pij_Si_t <- t(Pij_Si)
   Pij_Si_df <- as.data.frame (Pij_Si_t)
   Compounds <- colnames(Pij_Si_df)
-  Pij_Si_df <- setDT(Pij_Si_df, keep.rownames = "Species")
+  Pij_Si_df <- setDT(Pij_Si_df, keep.rownames = "Samples")
   Tidy_table <- pivot_longer(Pij_Si_df, all_of(Compounds), names_to = "Compounds", values_to = "Pij_Si")
-  Tidy_table$Species <- sub("\\_?\\.?\\d+", "", Tidy_table$Species)
-  Tidy_table$Species <- sub("\\..", ".", Tidy_table$Species)
+  Tidy_table$Samples <- sub("\\_?\\.?\\d+", "", Tidy_table$Samples)
+  Tidy_table$Samples <- sub("\\..", ".", Tidy_table$Samples)
   print (Tidy_table)
   Table_filtered <- my_filter_function (Tidy_table)
   print (Table_filtered)
 
   # Graphical Output
-  p <- ggplot(Tidy_table, aes(Species, Pij_Si, color = Compounds)) + geom_point() + theme(legend.position = "none")
+  p <- ggplot(Tidy_table, aes(Samples, Pij_Si, color = Compounds)) + geom_point() + theme(legend.position = "none")
   print(p)
-  q <- ggplot (Table_filtered, aes(Species, Pij_Si, color = Compounds)) + geom_point() + geom_text(aes(label= Compounds), hjust=0,vjust=0, size=3) + theme(legend.position = "none")
+  q <- ggplot (Table_filtered, aes(Samples, Pij_Si, color = Compounds)) + geom_point() + geom_text(aes(label= Compounds), hjust=0,vjust=0, size=3) + theme(legend.position = "none")
   print(q)
   grid_plot <- grid.arrange (p,q)
 
@@ -321,7 +323,7 @@ MetPar <- function(Data){
   # Extract the Hj and Dj parameters per species
   MetPar_df <- cbind(Hj[[2]], Dj = Dj[[3]]$Dj)
   # Evaluate the dependence between Hj and Dj
-  p1 <- ggplot(MetPar_df, aes(Hj, Dj, color= Species)) + geom_point()
+  p1 <- ggplot(MetPar_df, aes(Hj, Dj, color= Samples)) + geom_point()
 
   list <- list (MetPar_df, p1)
   print(list)
@@ -366,7 +368,7 @@ MetStats <- function(Data) {
   MetStats <- cbind(MetPar_df, HRj = HRj, Divj = Divj)
 
   #Graphical output
-  p1 <- ggplot(MetStats, aes(Divj, Dj, color= Species)) + geom_point() + expand_limits(x = 0, y = 0) + geom_abline(slope=1, intercept=0)
+  p1 <- ggplot(MetStats, aes(Divj, Dj, color= Samples)) + geom_point() + expand_limits(x = 0, y = 0) + geom_abline(slope=1, intercept=0)
 
   list <- list (MetStats, p1)
   print(list)
