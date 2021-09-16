@@ -353,7 +353,7 @@ MetStats <- function(Data) {
   #Mssg
   print("MePar must be store as MetPar")
   #Error
-  if (exists("MePar") == FALSE) {
+  if (exists("MetPar") == FALSE) {
     stop ("MetPar does not exist. Please, execute MetPar() function and store it as MetPar. MetPar <- MetPar(Data)")}
 
   # Calculate divergence
