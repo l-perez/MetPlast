@@ -364,6 +364,8 @@ MetStats <- function(Data) {
   Dj <- HRj - Hj[[2]]$Hj
 
   #Generating the output
+  MetPar <- MetPar(Data)
+  MetPar_df <- data.frame(MetPar[[1]])
   MetStats <- cbind(MetPar_df, HRj = HRj, Divj = Dj)
   print(MetStats)
 }
