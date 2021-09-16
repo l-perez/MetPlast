@@ -197,7 +197,6 @@ MetDiv <- function(Data){
 #'
 #' @examples Dj <- MetSpec (Data)
 
-
 MetSpec <- function (Data){
   # Mssg
   print("THIS PARAMETER CAN NOT BE EXTRAPOLATED TO OTHER DATA SETS OR SUBSETS")
@@ -240,7 +239,6 @@ MetSpec <- function (Data){
   list <- list(grid_plot, Si_df, Dj_Species_df)
   print(list)
 }
-
 #' Metabolite Specialization Analysis
 #'
 #' @param Data
@@ -366,7 +364,7 @@ MetStats <- function(Data) {
   Dj <- HRj - Hj[[2]]$Hj
 
   #Generating the output
-  MetStats <- cbind(Hj[[2]], HRj = HRj, Divj = Dj)
+  MetStats <- cbind(Hj[[2]], Dj = Dj[[3]]$Dj, HRj = HRj, Divj = Dj)
   print(MetStats)
 }
 
