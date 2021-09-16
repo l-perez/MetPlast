@@ -351,10 +351,10 @@ MetPar <- function(Data){
 MetStats <- function(Data) {
 
   #Mssg
-  print("MetDiv table must be store as Hj")
+  print("MePar must be store as MetPar")
   #Error
-  if (exists("Hj") == FALSE) {
-    stop ("Hj does not exist. Please, execute MetDiv() function and store it as Hj. Hj <- MetDiv(Data)")}
+  if (exists("MePar") == FALSE) {
+    stop ("MetPar does not exist. Please, execute MetPar() function and store it as MetPar. MetPar <- MetPar(Data)")}
 
   # Calculate divergence
   Pij <- Pij_fc (Data)
@@ -364,6 +364,7 @@ MetStats <- function(Data) {
   Dj <- HRj - Hj[[2]]$Hj
 
   #Generating the output
+  MetPar_df <- data.frame(MetPar[[1]])
   MetStats <- cbind(MetPar_df, HRj = HRj, Divj = Dj)
   print(MetStats)
 }
