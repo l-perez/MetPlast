@@ -369,7 +369,7 @@ MetStats <- function(Data) {
   MetStats <- cbind(MetPar_df, HRj = HRj, Divj = Divj)
 
   #Graphical output
-  p1 <- ggplot(MetStats, aes(Dj, Divj, color= Species)) + geom_point()
+  p1 <- ggplot(MetStats, aes(Dj, Divj, color= Species)) + geom_point() + geom_abline(slope=1, intercept=0)
 
   list <- list (MetStats, p1)
   print(list)
