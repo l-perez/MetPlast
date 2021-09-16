@@ -158,9 +158,9 @@ MetDiv <- function(Data){
   # Output generation
   Hj <- cbind (Hj, numb_peaks)
   Hj_df <- as.data.frame (Hj)
+  Hj_Samples_df <- setDT(Hj_df, keep.rownames = "Samples")
   Hj_Samples_df$Samples <- sub("\\_?\\.?\\d+", "", Hj_Samples_df$Samples)
   Hj_Samples_df$Samples <- sub("\\..", ".", Hj_Samples_df$Samples)
-  Hj_Samples_df <- setDT(Hj_df, keep.rownames = "Samples")
 
   # Graphical output
   p1 <- ggplot(Hj_Samples_df, aes(Hj, Samples, color = Samples)) + geom_boxplot() + geom_point() + theme(legend.position = "none")
