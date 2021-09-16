@@ -353,20 +353,25 @@ MetStats <- function(Data) {
   #Mssg
   print("MePar must be store as MetPar")
   #Error
-  if (exists("MetPar") == FALSE) {
-    stop ("MetPar does not exist. Please, execute MetPar() function and store it as MetPar. MetPar <- MetPar(Data)")}
+  if (exists("Hj") == FALSE) {
+    stop ("Hj does not exist. Please, execute MetDiv() function and store it as Hj. Hj <- MetDiv(Data)")}
 
   # Calculate divergence
   Pij <- Pij_fc (Data)
   HRj <- apply (Pij, MARGIN = 2, FUN = HRj_function)
 
   # Calculate Kullback–Leibler divergence
-  Dj <- HRj - Hj[[2]]$Hj
+  Divj <- HRj - Hj[[2]]$Hj
 
   #Generating the output
   MetPar <- MetPar(Data)
   MetPar_df <- data.frame(MetPar[[1]])
-  MetStats <- cbind(MetPar_df, HRj = HRj, Divj = Dj)
-  print(MetStats)
+  MetStats <- cbind(MetPar_df, HRj = HRj, Divj = Divj)
+
+  #Graphical output
+  p1 <- ggplot(MetStats, aes(Dj, Divj, color= Species)) + geom_point()
+
+  list <- list (MetStats, p1)
+  print(list)
 }
 
