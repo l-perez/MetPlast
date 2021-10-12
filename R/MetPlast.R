@@ -10,8 +10,10 @@
 #'
 #' @return It returns a dataframe with metabolite frequency
 
-Pij_fc <- function (Data) {Total_samples <- apply (Data, MARGIN=2, FUN = sum)
-Pij <- sweep(Data, MARGIN = 2, Total_samples, FUN = '/')}
+Pij_fc <- function (Data) {
+  Total_samples <- colSums(Data)
+  Pij <- sweep(Data, MARGIN = 2, Total_samples, FUN = '/')
+}
 
 #' Metabolite expression identity internal function
 #'
